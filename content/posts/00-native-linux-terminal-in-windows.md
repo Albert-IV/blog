@@ -34,8 +34,69 @@ Remember the X Server that's running on Windows?  These terminals use `dbus` to 
 
 Either option will require you to get a working `dbus` working inside of Ubuntu.  Sadly it seems that the default Ubuntu install at time of writing isn't working but _luckily_ you can get around the issues of not being able to communicate using `dbus` by installing the `x11-dbus` package.  After looking around for more information on `x11-dbus` it appears as though [x11-dbus adds a `dbus-launch` command missing by default](https://serverfault.com/a/411353).  Is that why if you run either terminal it dies?  I'm not sure, but I do know that installing the package fixes the launch problem.
 
+## Set Up Launch Scripts
+
+Now that we have a working terminal, one thing that we would like is to have a Windows-side script to automatically launch our terminal.  Currently to launch a Linux terminal we have to start our X Server on Windows, start a Bash shell, and execute the terminal command prepended by `DISPLAY :0`.  Let's automate some of this so we can quickly get to a working shell without all that hubaloo.
+
+Let's start off by theiving the script in the blog post linked previously:
+
+```
+args = "-c" & " -l " & """DISPLAY=:0 terminator"""
+WScript.CreateObject("Shell.Application").ShellExecute "bash", args, "", "open", 0
+```
+
+Save that as a `.vbs` file somewhere safe, then we're in business.  With our X Server started on Windows open a Powershell or regular terminal and execute `C:\Windows\System32\wscript.exe <PATH_TO_YOUR_SCRIPT>` to verify that our script launches the terminal like we expect it to.  Now that we have our script created, let's make a shortcut we can put on our Desktop or Start menu!  
+
+This is as simple as taking the `wscript.exe` command that we used earlier and creating a shortcut that runs that command.  Right-click on your Desktop and select New -> Shorcut and paste the command in on the location section of the shortcut creation.  One thing you may want to do is replace the icon of the shortcut.  Just search your terminal of choice on Google Images, I'm sure you'll find a suitable image to use there.  *One thing to note* is that you'll want to tuck that image file away where it's not going to be moved or deleted.  If the icon gets (re)moved the shortcut icon will similarly go away!
+
+Now we have a shortcut to launch your terminal and a badass icon, but it only takes us halfway there! There has to be a way of starting X-Server automatically... right? The ideal situation would be the startup script for your terminal will check to see if the X-Server is started.  If it hasn't then we launch the X-Server in the background and if it's already running we leave it as-is.
+
+After some noodling I found a script I blatently copy-pasted (and have since lost the link to) that allows you to check to see if a specific process is running.  Once I got a function set up most of the rest of the script wrote itself!  (I'm joking, this ended up taking longer than I care to admit to correctly get running.)  Please note, this script is set up to look for `vcxsrv.exe` and `terminator`, so if you want this to run with `Xming` or `gnome-terminal` you'll need to fiddle with it a bit to have it work for your specific setup.
+
+```
+option explicit
+DIM strComputer,strProcess, strXserverLoc, terminal 
+
+strComputer = "." ' local computer
+strProcess = "vcxsrv.exe"
+strXserverLoc = """C:\Program Files\VcXsrv\vcxsrv.exe"""
+terminal = "terminator"
+
+' Function to check if a process is running
+function isProcessRunning(byval strComputer,byval strProcessName)
+
+	Dim objWMIService, strWMIQuery
+
+	strWMIQuery = "Select * from Win32_Process where name like '" & strProcessName & "'"
+	
+	Set objWMIService = GetObject("winmgmts:" _
+		& "{impersonationLevel=impersonate}!\\" _ 
+			& strComputer & "\root\cimv2") 
+
+
+	if objWMIService.ExecQuery(strWMIQuery).Count > 0 then
+		isProcessRunning = true
+	else
+		isProcessRunning = false
+	end if
+
+end function
+
+' Check if X server is running, if not start it
+if (Not isProcessRunning(strComputer, strProcess)) then
+    CreateObject("Wscript.Shell").Run strXserverLoc & " :0 -ac -terminate -lesspointer -multiwindow -clipboard -wgl -dpi auto"
+end if
+
+WScript.CreateObject("Shell.Application").ShellExecute "bash", "-c" & " -l " & """DISPLAY=:0 " & terminal & """", "", "open", 0
+```
+
+Now that we have a script that automatically runs X-server windows side and launches the terminal through Bash, starting the terminal is super easy!
+
 ## Setting Up ZSH and Friends
 
-## Set Up Launch Scripts
+One thing we want to do is add ZSH as our default shell, ideally leveraging 
+
+
+One thing t
 
 ## Advanced ZSH Configuration
