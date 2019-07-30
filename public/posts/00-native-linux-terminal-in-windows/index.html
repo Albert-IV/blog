@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<title>
+				Running An Ubuntu-Powered Terminal In Windows &middot; Pixyll
+		</title>
+
+		
+  		<link rel="stylesheet" href="/css/style.css">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+		
+		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+
+		
+		<link href="" rel="alternate" type="application/rss+xml" title="Pixyll" />
+	</head>
+
+    <body>
+        		<nav class="nav">
+			<div class="nav-container">
+				<a href="/">
+					<h2 class="nav-title">Pixyll</h2>
+				</a>
+				<ul>
+    <li><a href="/about">About</a></li>
+    <li><a href="/">Posts</a></li>
+</ul>
+			</div>
+		</nav>
+
+        
+
+<main>
+	<div class="post">
+		<div class="post-info">
+    <span>Written by</span>
+        
+</div>
+		<h1 class="post-title">Running An Ubuntu-Powered Terminal In Windows</h1>
+<div class="post-line"></div>
+
+		
+
+		
+
+<h1 id="intro">Intro</h1>
+
+<p>Lots of time and energy can be spent trying to get a good terminal setup inside of Windows, whether that is using popular tools such as Cywign, cmder, or similar. After trying the various options, the best solution I found was to skip the unnecessaries and use a native Linux shell inside Windows itself! There is a fair amount of setup to get this to work correctly, but buy using the <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">Windows Subsystem for Linux</a> and a native X server running on your Windows machine you can have a nearly seamless experience.  This article will focus on using Ubuntu though if you dig hard enough you might be able to get the terminal working on other distros.</p>
+
+<p>Before I get too deep into this, I want to give a special thanks to <a href="https://blog.ropnop.com/configuring-a-pretty-and-usable-terminal-emulator-for-wsl/">this blog post,</a> which got me 90% of the way there. There were a few steps that were ambigous and had some issues I had to work through, so I thought supplying an updated guide would be appreciated.</p>
+
+<h2 id="windows-subsystem-for-linux">Windows Subsystem for Linux</h2>
+
+<p>Unfortunately due to the advanced nature of this topic Microsoft has decided to hide the ability to enable this feature through a flag that&rsquo;s set through PowerShell. Open a new PowerShell window as admin and run the following command:</p>
+
+<pre><code class="language-powershell">Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+</code></pre>
+
+<p>Once you have this enabled, you&rsquo;ll be able to install some of the more popular distros either through the Windows Store or by <a href="https://docs.microsoft.com/en-us/windows/wsl/install-on-server">using PowerShell</a> if you&rsquo;re feeling spicy. Personally I went through the Windows Store, since I like the idea of accidentally uninstalling my Linux machine and losing all my hard-earned progress.</p>
+
+<p>Once you have your Linux distro installed (this guide will be using Ubuntu moving foward), you will need to launch it once to set up your username and password. After this is set up, it&rsquo;s time to install an X server on your Windows machine!</p>
+
+<h2 id="x-on-windows">X on Windows</h2>
+
+<p>To start off with, what is X?  X at it&rsquo;s core is a <a href="https://en.wikipedia.org/wiki/X_Window_System_core_protocol">protocol</a> that makes up the X Window System. Essentially this protocol handles communication between the application you&rsquo;re running and the X server that renders the windows. Luckily it&rsquo;s a protocol, meaning that someone has already implemented X inside of Windows and has allowed this whole process to work in the first place.</p>
+
+<p>There are two major options for getting this working, <a href="https://sourceforge.net/projects/vcxsrv/">VcXsrv</a> and <a href="https://sourceforge.net/projects/xming/">Xming</a>. I blindly followed the advice supplied by Ronnie Flather&rsquo;s blog post and chose VcXsrv.</p>
+
+<h2 id="installing-the-command-line">Installing the Command Line</h2>
+
+<p>Now that we have the X server running on Windows the next step is to get the terminal application installed in Ubuntu-land.  There are a few options available and all of them have their little quirks.  <code>gnome-terminal</code> is a good option, as is <code>terminator</code> (though it needs a little configuration to feel &ldquo;right&rdquo;). Unfortunately trying run either will result in an error without some&hellip; intervention.</p>
+
+<p>Remember the X Server that&rsquo;s running on Windows?  These terminals use <code>dbus</code> to communicate between the running application and the X Server.  Most documentation I managed to find on the issue suggests that the reason why by default <code>dbus</code> errors out is due to it trying to communicate with the X Server using Unix sockets (which gets blocked inside of Windows).  The suggestions say to edit the configuration to make <code>dbus</code> to fall back to using TCP communication, but unfortunately at time of writing the configuration file is missing.  After searching and messing around, I managed to figure out just the fix.</p>
+
+<p>Either option will require you to get a working <code>dbus</code> working inside of Ubuntu.  Sadly it seems that the default Ubuntu install at time of writing isn&rsquo;t working but <em>luckily</em> you can get around the issues of not being able to communicate using <code>dbus</code> by installing the <code>x11-dbus</code> package.  After looking around for more information on <code>x11-dbus</code> it appears as though <a href="https://serverfault.com/a/411353">x11-dbus adds a <code>dbus-launch</code> command missing by default</a>.  Is that why if you run either terminal it dies?  I&rsquo;m not sure, but I do know that installing the package fixes the launch problem.</p>
+
+<h2 id="set-up-launch-scripts">Set Up Launch Scripts</h2>
+
+<p>Now that we have a working terminal, one thing that we would like is to have a Windows-side script to automatically launch our terminal.  Currently to launch a Linux terminal we have to start our X Server on Windows, start a Bash shell, and execute the terminal command prepended by <code>DISPLAY :0</code>.  Let&rsquo;s automate some of this so we can quickly get to a working shell without all that hubaloo.</p>
+
+<p>Let&rsquo;s start off by theiving the script in the blog post linked previously:</p>
+
+<pre><code>args = &quot;-c&quot; &amp; &quot; -l &quot; &amp; &quot;&quot;&quot;DISPLAY=:0 terminator&quot;&quot;&quot;
+WScript.CreateObject(&quot;Shell.Application&quot;).ShellExecute &quot;bash&quot;, args, &quot;&quot;, &quot;open&quot;, 0
+</code></pre>
+
+<p>Save that as a <code>.vbs</code> file somewhere safe, then we&rsquo;re in business.  With our X Server started on Windows open a Powershell or regular terminal and execute <code>C:\Windows\System32\wscript.exe &lt;PATH_TO_YOUR_SCRIPT&gt;</code> to verify that our script launches the terminal like we expect it to.  Now that we have our script created, let&rsquo;s make a shortcut we can put on our Desktop or Start menu!</p>
+
+<p>This is as simple as taking the <code>wscript.exe</code> command that we used earlier and creating a shortcut that runs that command.  Right-click on your Desktop and select New -&gt; Shorcut and paste the command in on the location section of the shortcut creation.  One thing you may want to do is replace the icon of the shortcut.  Just search your terminal of choice on Google Images, I&rsquo;m sure you&rsquo;ll find a suitable image to use there.  <em>One thing to note</em> is that you&rsquo;ll want to tuck that image file away where it&rsquo;s not going to be moved or deleted.  If the icon gets (re)moved the shortcut icon will similarly go away!</p>
+
+<p>Now we have a shortcut to launch your terminal and a badass icon, but it only takes us halfway there! There has to be a way of starting X-Server automatically&hellip; right? The ideal situation would be the startup script for your terminal will check to see if the X-Server is started.  If it hasn&rsquo;t then we launch the X-Server in the background and if it&rsquo;s already running we leave it as-is.</p>
+
+<p>After some noodling I found a script I blatently copy-pasted (and have since lost the link to) that allows you to check to see if a specific process is running.  Once I got a function set up most of the rest of the script wrote itself!  (I&rsquo;m joking, this ended up taking longer than I care to admit to correctly get running.)  Please note, this script is set up to look for <code>vcxsrv.exe</code> and <code>terminator</code>, so if you want this to run with <code>Xming</code> or <code>gnome-terminal</code> you&rsquo;ll need to fiddle with it a bit to have it work for your specific setup.</p>
+
+<pre><code>option explicit
+DIM strComputer,strProcess, strXserverLoc, terminal 
+
+strComputer = &quot;.&quot; ' local computer
+strProcess = &quot;vcxsrv.exe&quot;
+strXserverLoc = &quot;&quot;&quot;C:\Program Files\VcXsrv\vcxsrv.exe&quot;&quot;&quot;
+terminal = &quot;terminator&quot;
+
+' Function to check if a process is running
+function isProcessRunning(byval strComputer,byval strProcessName)
+
+	Dim objWMIService, strWMIQuery
+
+	strWMIQuery = &quot;Select * from Win32_Process where name like '&quot; &amp; strProcessName &amp; &quot;'&quot;
+	
+	Set objWMIService = GetObject(&quot;winmgmts:&quot; _
+		&amp; &quot;{impersonationLevel=impersonate}!\\&quot; _ 
+			&amp; strComputer &amp; &quot;\root\cimv2&quot;) 
+
+
+	if objWMIService.ExecQuery(strWMIQuery).Count &gt; 0 then
+		isProcessRunning = true
+	else
+		isProcessRunning = false
+	end if
+
+end function
+
+' Check if X server is running, if not start it
+if (Not isProcessRunning(strComputer, strProcess)) then
+    CreateObject(&quot;Wscript.Shell&quot;).Run strXserverLoc &amp; &quot; :0 -ac -terminate -lesspointer -multiwindow -clipboard -wgl -dpi auto&quot;
+end if
+
+WScript.CreateObject(&quot;Shell.Application&quot;).ShellExecute &quot;bash&quot;, &quot;-c&quot; &amp; &quot; -l &quot; &amp; &quot;&quot;&quot;DISPLAY=:0 &quot; &amp; terminal &amp; &quot;&quot;&quot;&quot;, &quot;&quot;, &quot;open&quot;, 0
+</code></pre>
+
+<p>Now that we have a script that automatically runs X-server windows side and launches the terminal through Bash, starting the terminal is super easy!</p>
+
+<h2 id="setting-up-zsh-and-friends">Setting Up ZSH and Friends</h2>
+
+<p>One thing we want to do is add ZSH as our default shell, ideally leveraging</p>
+
+<p>One thing t</p>
+
+<h2 id="advanced-zsh-configuration">Advanced ZSH Configuration</h2>
+
+
+		
+	</div>
+
+	<div class="pagination">
+		<a href="/posts/00-clojure-development-in-vim/" class="right arrow">&#8594;</a>
+
+		<a href="#" class="top">Top</a>
+	</div>
+</main>
+
+
+        		<footer>
+			<span>
+			&copy; <time datetime="2019-07-30 06:24:57.4405076 -0500 CDT m=&#43;0.108898901">2019</time> . Made with <a href='https://gohugo.io'>Hugo</a> using the <a href='https://github.com/EmielH/tale-hugo/'>Tale</a> theme.
+			</span>
+		</footer>
+
+    </body>
+</html>

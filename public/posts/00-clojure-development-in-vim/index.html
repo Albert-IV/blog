@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<title>
+				 &middot; Pixyll
+		</title>
+
+		
+  		<link rel="stylesheet" href="/css/style.css">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
+		
+		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+
+		
+		<link href="" rel="alternate" type="application/rss+xml" title="Pixyll" />
+	</head>
+
+    <body>
+        		<nav class="nav">
+			<div class="nav-container">
+				<a href="/">
+					<h2 class="nav-title">Pixyll</h2>
+				</a>
+				<ul>
+    <li><a href="/about">About</a></li>
+    <li><a href="/">Posts</a></li>
+</ul>
+			</div>
+		</nav>
+
+        
+
+<main>
+	<div class="post">
+		<div class="post-info">
+    <span>Written by</span>
+        
+</div>
+		<h1 class="post-title"></h1>
+<div class="post-line"></div>
+
+		
+
+		<ul>
+<li>Install NeoVim</li>
+<li>Git clone Pathogen inside of <code>~/.config/nvim/autoload</code></li>
+<li>Git clone the following packages inside of <code>~/.config/nvim/bundle</code>
+
+<ul>
+<li>Rainbow Parentheses</li>
+<li>Vim Clojure Static</li>
+<li>Vim Fireplace</li>
+</ul></li>
+<li>Update your vim file (unlike vim&rsquo;s location <code>~/.vimfile</code> NeoVim will require the file to be located at <code>~/.config/nvim/init.vim</code>).  Then execute <code>pathogen#infect()</code> which enables Pathogen module loading</li>
+<li>Turn on the settings for Rainbow Parentheses
+    <code>
+    au VimEnter * RainbowParenthesesToggle
+    au Syntax * RainbowParenthesesLoadRound
+    au Syntax * RainbowParenthesesLoadSquare
+    au Syntax * RainbowParenthesesLoadBraces
+</code></li>
+<li>Turn on Clojure Static</li>
+<li>Navigate to your project in two terminals</li>
+<li>Start up your leiningen REPL using <code>lein repl</code></li>
+<li>In the other terminal start nvim.</li>
+<li>Confirm that vim can acceess the repl by hovering over a function call and typing <code>cpp</code> inside of Command mode.  <code>(println &quot;Hello World!&quot;)</code> can work!</li>
+<li>Shazam you now have a working Clojure REPL working inside of your code editor!</li>
+</ul>
+
+
+		
+	</div>
+
+	<div class="pagination">
+		<a href="/posts/00-native-linux-terminal-in-windows/" class="left arrow">&#8592;</a>
+
+		<a href="#" class="top">Top</a>
+	</div>
+</main>
+
+
+        		<footer>
+			<span>
+			&copy; <time datetime="2019-07-30 06:24:57.439273 -0500 CDT m=&#43;0.107664301">2019</time> . Made with <a href='https://gohugo.io'>Hugo</a> using the <a href='https://github.com/EmielH/tale-hugo/'>Tale</a> theme.
+			</span>
+		</footer>
+
+    </body>
+</html>
