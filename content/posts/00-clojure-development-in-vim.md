@@ -1,3 +1,8 @@
+---
+title: 'Clojure Development In Vim'
+date: 2019-03-26T08:47:11+01:00 
+draft: true
+---
 * Install NeoVim
 * Git clone Pathogen inside of `~/.config/nvim/autoload`
 * Git clone the following packages inside of `~/.config/nvim/bundle`
